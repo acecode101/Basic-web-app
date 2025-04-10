@@ -1,22 +1,39 @@
-from flask import Flask, request, session, redirect
 import os
+from flask import Flask, request, redirect, session, render_template_string
 
 app = Flask(__name__)
-app.secret_key = 'x'
+app.secret_key = "secret"  # Needed for session
 
-@app.route('/')
+users = {"admin": "pass123"}  # Simple user store
+
+login_page = '''
+<form method="POST">
+  Username: <input name="username"><br>
+  Password: <input name="password" type="password"><br>
+  <input type="submit" value="Login">
+</form>
+'''
+
+@app.route("/")
 def home():
-    return f"Hi {session['u']}! <a href='/lo'>Logout</a>" if 'u' in session else "<form method=post action='/li'><input name=u><input name=p type=password><input type=submit></form>"
+    if "user" in session:
+        return f"Welcome {session['user']}!"
+    return redirect("/login")
 
-@app.route('/li', methods=['POST'])
-def li():
-    if request.form['u'] == 'a' and request.form['p'] == '1': session['u'] = 'a'
-    return redirect('/')
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        u, p = request.form["username"], request.form["password"]
+        if u in users and users[u] == p:
+            session["user"] = u
+            return redirect("/")
+    return render_template_string(login_page)
 
-@app.route('/lo')
-def lo():
-    session.pop('u', 0)
-    return redirect('/')
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/login")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
