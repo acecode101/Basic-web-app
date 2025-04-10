@@ -1,5 +1,0 @@
-services:
-  - type: web
-    name: flask-app
-    env: python
-    startCommand: gunicorn app:app
